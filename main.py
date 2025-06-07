@@ -19,6 +19,11 @@ def get_strava_data():
     if response.status_code != 200:
         return {"error": "Failed to fetch activities"}, 500
 
-    return jsonify(response.json())
+    activities = sorted(
+    [a for a in response.json() if a["type"] == "Run"],
+    key=lambda x: x["start_date_local"],
+    reverse=True
+)
+return jsonify(activities)
 
 app.run(host="0.0.0.0", port=81)
