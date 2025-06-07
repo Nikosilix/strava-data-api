@@ -18,12 +18,13 @@ def get_strava_data():
     params = {"per_page": 30, "page": 1}
     response = requests.get(url, headers=headers, params=params)
 
-    if response.status_code != 200:
-        return {"error": "Failed to fetch activities"}, 500
-
     try:
+        data = response.json()
+        if not isinstance(data, list):
+            return {"error": "Unexpected data format"}, 500
+
         activities = sorted(
-            [a for a in response.json() if a.get("type") == "Run" and "start_date_local" in a],
+            [a for a in data if a.get("type") == "Run" and "start_date_local" in a],
             key=lambda x: x["start_date_local"],
             reverse=True
         )
