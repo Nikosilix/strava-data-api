@@ -31,6 +31,28 @@ def get_cached_data():
     except Exception as e:
         return {"error": f"Failed to read local cache: {str(e)}"}, 500
 
+@app.route('/refresh')
+def refresh_data():
+    url = "https://www.strava.com/api/v3/athlete/activities"
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "User-Agent": "StravaRunAnalyzerBot/1.0"
+    }
+    params = {"per_page": 30, "page": 1}
+
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        with open("cached_data.json", "w") as f:
+            json.dump(data, f)
+
+        return {"status": "Cache updated successfully"}, 200
+
+    except Exception as e:
+        return {"error": f"Failed to update cache: {str(e)}"}, 500
+
 @app.route('/exchange_token')
 def exchange_token():
     code = request.args.get('code')
