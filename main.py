@@ -14,7 +14,10 @@ def home():
 @app.route('/data')
 def get_strava_data():
     url = "https://www.strava.com/api/v3/athlete/activities"
-    headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "User-Agent": "StravaRunAnalyzerBot/1.0"
+    }
     params = {"per_page": 30, "page": 1}
     response = requests.get(url, headers=headers, params=params)
 
