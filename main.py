@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -12,17 +13,11 @@ def home():
     return "✅ Strava Data Server is Running."
 
 @app.route('/data')
-def get_strava_data():
-    url = "https://www.strava.com/api/v3/athlete/activities"
-    headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
-        "User-Agent": "StravaRunAnalyzerBot/1.0"
-    }
-    params = {"per_page": 30, "page": 1}
-    response = requests.get(url, headers=headers, params=params)
-
+def get_cached_data():
     try:
-        data = response.json()
+        with open("cached_data.json", "r") as f:
+            data = json.load(f)
+
         if not isinstance(data, list):
             return {"error": "Unexpected data format"}, 500
 
@@ -32,8 +27,9 @@ def get_strava_data():
             reverse=True
         )
         return jsonify(activities)
+
     except Exception as e:
-        return {"error": str(e)}, 500
+        return {"error": f"Failed to read local cache: {str(e)}"}, 500
 
 @app.route('/exchange_token')
 def exchange_token():
