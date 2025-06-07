@@ -1,7 +1,9 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
+CORS(app)
 
 ACCESS_TOKEN = "b600122189c2d0233095fa0eff77f198c35854ed"  # Your Strava access token
 
@@ -19,14 +21,16 @@ def get_strava_data():
     if response.status_code != 200:
         return {"error": "Failed to fetch activities"}, 500
 
-    activities = sorted(
-        [a for a in response.json() if a["type"] == "Run"],
-        key=lambda x: x["start_date_local"],
-        reverse=True
-    )
-    return jsonify(activities)
+    try:
+        activities = sorted(
+            [a for a in response.json() if a.get("type") == "Run" and "start_date_local" in a],
+            key=lambda x: x["start_date_local"],
+            reverse=True
+        )
+        return jsonify(activities)
+    except Exception as e:
+        return {"error": str(e)}, 500
 
-# 🔁 OAuth token exchange endpoint
 @app.route('/exchange_token')
 def exchange_token():
     code = request.args.get('code')
@@ -42,6 +46,3 @@ def exchange_token():
 
     response = requests.post('https://www.strava.com/oauth/token', data=payload)
     return response.json()
-
-# 🔥 NOTE: Do not run app.run() — Render handles the server
-# app.run(host="0.0.0.0", port=81)
