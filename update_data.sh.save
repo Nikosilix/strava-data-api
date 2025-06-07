@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo "Fetching latest Strava data..."
+python3 main.py
+
+if [ $? -eq 0 ]; then
+    echo "Python script completed successfully."
+    git add cached_data.json
+    git commit -m "new data"
+    git push origin main
+else
+    echo "Python script failed. Aborting git operations."
+fi
+
