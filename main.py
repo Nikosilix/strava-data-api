@@ -26,7 +26,7 @@ def get_strava_data():
     )
     return jsonify(activities)
 
-# 🔁 NEW: OAuth token exchange endpoint
+# 🔁 OAuth token exchange endpoint
 @app.route('/exchange_token')
 def exchange_token():
     code = request.args.get('code')
@@ -34,8 +34,8 @@ def exchange_token():
         return "Missing code", 400
 
     payload = {
-        'client_id': 163386,            # Replace this
-        'client_secret': '70e5f82ea9729fc4c54ca6f13880d917054478c5',  # Replace this
+        'client_id': 163386,
+        'client_secret': '70e5f82ea9729fc4c54ca6f13880d917054478c5',
         'code': code,
         'grant_type': 'authorization_code'
     }
@@ -43,4 +43,5 @@ def exchange_token():
     response = requests.post('https://www.strava.com/oauth/token', data=payload)
     return response.json()
 
-app.run(host="0.0.0.0", port=81)
+# 🔥 NOTE: Do not run app.run() — Render handles the server
+# app.run(host="0.0.0.0", port=81)
