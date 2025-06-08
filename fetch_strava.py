@@ -1,40 +1,57 @@
+import os
+import time
 import requests
 import json
-import time
 
-# Replace with your real client credentials
-CLIENT_ID = "163386"
-CLIENT_SECRET = "70e5f82ea9729fc4c54ca6f13880d917054478c5"
+# Load environment variables
+ACCESS_TOKEN = os.getenv("STRAVA_ACCESS_TOKEN")
+REFRESH_TOKEN = os.getenv("STRAVA_REFRESH_TOKEN")
+EXPIRES_AT = int(os.getenv("STRAVA_EXPIRES_AT", 0))
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 
-# Read stored token data
-with open("token.json", "r") as f:
-    token_data = json.load(f)
+print("🧪 DEBUG - Loaded env vars:")
+print("ACCESS_TOKEN:", ACCESS_TOKEN)
+print("REFRESH_TOKEN:", REFRESH_TOKEN)
+print("EXPIRES_AT:", EXPIRES_AT)
+print("Current Time:", int(time.time()))
 
-# Check expiration
-if token_data["expires_at"] < time.time():
-    print("🔄 Token expired. Refreshing...")
-    response = requests.post(
+# Refresh the token if expired
+if time.time() > EXPIRES_AT:
+    print("🔄 Access token expired, refreshing...")
+
+    res = requests.post(
         "https://www.strava.com/api/v3/oauth/token",
         data={
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
             "grant_type": "refresh_token",
-            "refresh_token": token_data["refresh_token"]
+            "refresh_token": REFRESH_TOKEN
         }
     )
-    if response.status_code != 200:
-        print("❌ Failed to refresh token:", response.text)
+
+    if res.status_code != 200:
+        print("❌ Failed to refresh token:", res.text)
         exit(1)
 
-    token_data = response.json()
-    with open("token.json", "w") as f:
-        json.dump(token_data, f)
+    new_token = res.json()
+    ACCESS_TOKEN = new_token["access_token"]
+    REFRESH_TOKEN = new_token["refresh_token"]
+    EXPIRES_AT = new_token["expires_at"]
+
+    print("✅ Token refreshed.")
+    print("🔑 New Access Token:", ACCESS_TOKEN)
+    print("⏳ New Expiry:", EXPIRES_AT)
+
+    # Important: If using env vars, you must update them manually in Render
+
 else:
     print("✅ Token still valid.")
 
 # Fetch activities
-headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
 params = {"per_page": 30, "page": 1}
+
 response = requests.get("https://www.strava.com/api/v3/athlete/activities", headers=headers, params=params)
 
 if response.status_code == 200:
@@ -47,4 +64,4 @@ if response.status_code == 200:
         json.dump(activities, f, indent=2)
     print("✅ Data updated and saved to cached_data.json")
 else:
-    print("❌ Failed to fetch data:", response.text)
+    print("❌ Failed to fetch data:", response.status_code, response.text)
