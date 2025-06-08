@@ -31,7 +31,7 @@ if time.time() > EXPIRES_AT:
     )
 
     if res.status_code != 200:
-        print("❌ Failed to refresh token:", res.text)
+        print("❌ Failed to refresh token:", res.status_code, res.text)
         exit(1)
 
     new_token = res.json()
@@ -42,8 +42,6 @@ if time.time() > EXPIRES_AT:
     print("✅ Token refreshed.")
     print("🔑 New Access Token:", ACCESS_TOKEN)
     print("⏳ New Expiry:", EXPIRES_AT)
-
-    # Important: If using env vars, you must update them manually in Render
 
 else:
     print("✅ Token still valid.")
